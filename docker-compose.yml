@@ -3,7 +3,7 @@ services:
   app:
     build:
       args:
-        user: janis
+        user: localuser
         uid: 1000
       context: ./
       dockerfile: Dockerfile
@@ -13,6 +13,9 @@ services:
     working_dir: /var/www/
     volumes:
       - ./:/var/www
+      - /var/www/vendor
+      - /var/www/node_modules
+      - /var/www/public/build
     networks:
       - app-network
 
@@ -20,11 +23,11 @@ services:
     image: mysql:8.2
     container_name: app-db
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_DATABASE: docker-preset-db
+      MYSQL_ROOT_PASSWORD: testpw
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:

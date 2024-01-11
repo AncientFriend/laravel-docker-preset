@@ -14,6 +14,17 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip
 
+# install nvm & node
+ENV NODE_VERSION=16.13.0
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+ENV NVM_DIR=/root/.nvm
+RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
+RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
+ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+RUN node --version
+RUN npm --version
+
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -28,7 +39,14 @@ RUN useradd -G www-data,root -u $uid -d /home/$user $user
 RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user
 
+COPY ./ /var/www
+
 # Set working directory
 WORKDIR /var/www
+
+RUN composer install
+RUN php artisan key:generate
+RUN npm install
+RUN npm run build
 
 USER $user
